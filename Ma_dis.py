@@ -1,25 +1,33 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
+
 
 __author__ = 'Guanjie Wang'
 __email__ = "gjwang@buaa.edu.cn"
 __date__ = " 31/12/2018"
 
 
-def generate_data(num, mean, cov, p=None):
+def generate_data(mean, cov, num=15):
     means = [mean, mean]
-    covs = [[cov, 0], [0, cov]]  # diagonal covariance, points lie on x or y-axis
+    covs = [[cov, 0], [0, cov]]
     x, y = np.random.multivariate_normal(means, covs, num).T
+    return x, y
+
+
+def view_data(x, y):
+    x = np.array(x)
+    y = np.array(y)
+    data = pd.DataFrame(np.vstack((x, y)).T)
+    data.to_csv('data1.csv')
+    assert x.shape == y.shape
+    form = '%.12f   %.12f'
+
+    for i in range(x.shape[0]):
+        print(form % (x[i], y[i]))
+
     print('x mean: {0} y mean: {1}'.format(np.mean(x), np.mean(y)))
     print('x cov: {0} y cov: {1}'.format(np.cov(x), np.cov(y)))
-    if p:
-        plt.xlabel('x')
-        plt.ylabel('y')
-        plt.plot(x, y, 'x')
-        plt.axis('equal')
-        plt.savefig('data_%d_%d.pdf' % (mean, cov))
-        # plt.show()
-    return x, y
 
 
 def get_mahalanobis_dis(point, mean, cov):
@@ -39,27 +47,58 @@ def get_mean_cov(x, y):
     return mean, cov
 
 
-def main():
+def gene_data(mean, num):
+    x1, y1 = generate_data(mean, num, 15)
+    get_mean_cov(x1, y1)
+    view_data(x1, y1)
+
+
+def read_data(filename):
+    data = pd.read_csv(filename)
+    data = np.array(data).astype(np.float32)[:, 1:]
+    return data[:, 0], data[:, 1]
+
+
+def data_plot(x1, y1, x2, y2):
+    plt.scatter(x1, y1, c='r')
+    plt.scatter(x2, y2, c='b')
+    plt.xlabel('x')
+    plt.ylabel('y')
+    plt.axis('equal')
+    plt.legend(['data1', 'data2'])
+    plt.show()
+
+
+def test(x1, y1, filename='val1.csv'):
     dia = np.array([[1, 0], [0, 1]])
+    data = []
+    for i in range(x1.shape[0]):
+        tv = [[x1[i]], [y1[i]]]
+        mdis1 = get_mahalanobis_dis(tv, mean=[0, 0], cov=dia * 5)
+        mdis2 = get_mahalanobis_dis(tv, mean=[10, 10], cov=dia * 20)
+        diff = mdis1 - mdis2
+        haha = 'G1' if diff <= 0 else 'G2'
+        data.append([mdis1, mdis2, diff])
+        print('%.8f %.8f %.8f %s' % (mdis1, mdis2, diff, haha))
+    data = np.array(data).reshape(15, 3)
+    data = pd.DataFrame(data)
+    data.to_csv(filename)
 
-    x1, y1 = generate_data(15, 0, 5)
-    mean1, cov1 = get_mean_cov(x1, y1)
 
-    x2, y2 = generate_data(15, 10, 20)
-    mean2, cov2 = get_mean_cov(x2, y2)
-    # plt.scatter(x1, y1, c='r')
-    # plt.scatter(x2, y2, c='b')
-    # plt.show()
-    # exit()
+def main():
+    # gene_data(0, 5)
+    # gene_data(10, 20)
 
-    x = [[-2.4066752], [1.18054059]]
-    mdis = get_mahalanobis_dis(x, mean1, cov1)
-    odis = get_mahalanobis_dis(x, mean1, dia)
-    print(mdis, odis)
+    x1, y1 = read_data('data1.csv')
+    # mean1, cov1 = get_mean_cov(x1, y1)
+    x2, y2 = read_data('data2.csv')
+    # mean2, cov2 = get_mean_cov(x2, y2)
 
-    mdis = get_mahalanobis_dis(x, mean2, cov2)
-    odis = get_mahalanobis_dis(x, mean2, dia)
-    print(mdis, odis)
+    data_plot(x1, y1, x2, y2)
+
+    test(x1, y1, 'val1.vsv')
+    test(x2, y2, 'val1.vsv')
+
 
 if __name__ == "__main__":
     main()
