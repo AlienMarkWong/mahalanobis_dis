@@ -15,11 +15,17 @@ def generate_data(mean, cov, num=15):
     return x, y
 
 
-def view_data(x, y):
+def gene_data(mean, num, filaname):
+    x1, y1 = generate_data(mean, num, 15)
+    get_mean_cov(x1, y1)
+    view_data(x1, y1, filaname)
+
+
+def view_data(x, y, filaname):
     x = np.array(x)
     y = np.array(y)
     data = pd.DataFrame(np.vstack((x, y)).T)
-    data.to_csv('data1.csv')
+    data.to_csv(filaname)
     assert x.shape == y.shape
     form = '%.12f   %.12f'
 
@@ -45,12 +51,6 @@ def get_mean_cov(x, y):
     mean = np.mean(data, axis=1)
     cov = np.cov(data)
     return mean, cov
-
-
-def gene_data(mean, num):
-    x1, y1 = generate_data(mean, num, 15)
-    get_mean_cov(x1, y1)
-    view_data(x1, y1)
 
 
 def read_data(filename):
@@ -86,18 +86,23 @@ def test(x1, y1, filename='val1.csv'):
 
 
 def main():
-    # gene_data(0, 5)
-    # gene_data(10, 20)
+    filename1 = 'tmp_data1.csv'
+    filename2 = 'tmp_data2.csv'
+    gene_data(1, 3, filename1)
+    gene_data(7, 50, filename2)
 
-    x1, y1 = read_data('data1.csv')
-    # mean1, cov1 = get_mean_cov(x1, y1)
-    x2, y2 = read_data('data2.csv')
-    # mean2, cov2 = get_mean_cov(x2, y2)
+    x1, y1 = read_data(filename1)
+    mean1, cov1 = get_mean_cov(x1, y1)
+    x2, y2 = read_data(filename2)
+    mean2, cov2 = get_mean_cov(x2, y2)
 
+    print(mean1, mean2)
+    print(cov1, cov2)
+    
     data_plot(x1, y1, x2, y2)
 
     test(x1, y1, 'val1.vsv')
-    test(x2, y2, 'val1.vsv')
+    test(x2, y2, 'val2.vsv')
 
 
 if __name__ == "__main__":
